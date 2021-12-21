@@ -1,0 +1,24 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+tensorflow = "*"
+tensorflow-hub = "*"
+pillow = "*"
+fastapi = "*"
+uvicorn = "*"
+aiohttp = "*"
+aiofiles = "*"
+python-multipart = "*"
+filelock = "*"
+python-dotenv = "*"
+
+[dev-packages]
+autopep8 = "*"
+flake8 = "*"
+pylint = "*"
+
+[requires]
+python_version = "3.8"

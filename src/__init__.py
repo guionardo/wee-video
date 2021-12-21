@@ -1,0 +1,5 @@
+__toolname__ = 'wee-ops-video-classifier'
+__version__ = '0.0.1'
+__description__ = 'WeeOps Video Classifier'
+__author__ = 'Guionardo Furlan'
+__author_email__ = 'guionardo@gmail.com'
