@@ -1,7 +1,8 @@
-import unittest
 import tempfile
+import unittest
+
 from src.api.models.get_video_response import GetVideoResponse
-                          -from src.api.models.video_status import VideoStatus
+from src.api.models.video_status import VideoStatus
 from src.services.file_repository import FileRepository
 
 
