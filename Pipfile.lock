@@ -190,11 +190,11 @@
         },
         "fastapi": {
             "hashes": [
-                "sha256:66da43cfe5185ea1df99552acffd201f1832c6b364e0f4136c0a99f933466ced",
-                "sha256:a36d5f2fad931aa3575c07a3472c784e81f3e664e3bb5c8b9c88d0ec1104f59c"
+                "sha256:21d03979b5336375c66fa5d1f3126c6beca650d5d2166fbb78345a30d33c8d06",
+                "sha256:5367226c7bcd7bfb2e17edaf225fd9a983095b1372281e9a3eb661336fb93748"
             ],
             "index": "pypi",
-            "version": "==0.70.0"
+            "version": "==0.70.1"
         },
         "filelock": {
             "hashes": [
@@ -355,7 +355,6 @@
                 "sha256:fb7229fa2a201a0c377ff3283174ec966da8f9fd7ffcc9a92f162d2e7fc9025b",
                 "sha256:fdac966699707b5554b815acc272d81e619dd0999f187cd52a61aef075f870ee"
             ],
-            "markers": "python_version >= '3.6'",
             "version": "==1.43.0"
         },
         "h11": {
@@ -403,6 +402,7 @@
             ],
             "markers": "python_version < '3.10'",
             "version": "==4.10.1"
+
         },
         "keras": {
             "hashes": [
@@ -824,6 +824,7 @@
             ],
             "markers": "python_version < '3.11' and python_version >= '3.7'",
             "version": "==0.24.0"
+
         },
         "termcolor": {
             "hashes": [

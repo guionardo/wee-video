@@ -1,0 +1,134 @@
+@startuml C4_Elements
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define DEVICONS2 https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons2
+!define MATERIAL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/material
+
+!include DEVICONS2/mysql.puml
+!include DEVICONS2/mongodb.puml
+!include DEVICONS2/php.puml
+!include DEVICONS2/python.puml
+!include DEVICONS2/redis.puml
+!include DEVICONS2/tensorflow_original.puml
+!include DEVICONS2/react_original.puml
+!include DEVICONS2/nodejs.puml
+!include DEVICONS2/kubernetes.puml
+!include DEVICONS2/go.puml
+!include DEVICONS2/github_original.puml
+!include DEVICONS/digital_ocean.puml
+!include DEVICONS2/kubernetes.puml
+!include MATERIAL/queue.puml
+!include MATERIAL/email.puml
+!include DEVICONS/react.puml
+
+title "Wee Ops Architecture"
+
+Deployment_Node(gh,"Github",$sprite="github_original") {
+    Deployment_Node(arch_repo,"Architecture Repository")
+    Deployment_Node(deployment_manifests,"Deployment manifests")
+}
+
+Deployment_Node(dc_dev,"Wee Development DataCenter","Debian 11","linode",$sprite="digital_ocean"){
+    AddProperty("Address","https://weedev.tk/")
+    Deployment_Node(dc_dev_k3s,"K3S",$sprite="kubernetes"){
+        Deployment_Node(persistence_dev,"Persistence"){            
+            ContainerDb(sql_dev,"SQL","MariaDB",$sprite="mysql")
+            ContainerDb(nosql_dev,"NoSQL","MongoDB",$sprite="mongodb")
+            Container_Ext(storage_dev,"Storage","Volume","Amazon S3")
+        }
+        Deployment_Node(aux_dev,"Auxiliary Services"){
+            Container(broker,"Broker","RabbitMQ",$sprite="email")
+            ContainerDb(cache_dev,"Cache","Redis",$sprite="redis")
+        }
+        Deployment_Node(services_dev,"Microservices"){
+            Deployment_Node(videoClassifier_dev,"Video Classifier") {
+                Container(vc_api_dev,"Video Classifier API","Golang",$sprite="go")
+                Container(vc_worker_dev,"Video Classifier","Python : Tensor Flow",$sprite="tensorflow_original")
+            }
+            Deployment_Node(wee_backend_dev,"Wee Backend"){
+                Container(wb_api_dev,"API","NodeJS",$sprite="nodejs")
+            }
+            Deployment_Node(wee_frontend_dev,"Wee Frontend"){
+                Container(wf_main_dev,"Main Frontend SPA","JavaScript, React",$sprite="react")
+            }
+        }
+
+    }
+}
+
+Rel(vc_worker_dev, broker, "Receive notifications and process videos")
+Rel(vc_worker_dev,cache_dev,"Saves processed data from videos")
+Rel(vc_api_dev,storage_dev,"Receive videos and save into storage")
+Rel(vc_api_dev,broker,"Notify about received video")
+Rel(vc_api_dev,cache_dev,"Reads processed data from videos")
+Rel(wb_api_dev,sql_dev,"Structured data persistence")
+Rel(wf_main_dev,wb_api_dev,"a")
+Rel(wb_api_dev,cache_dev,"b")
+
+
+
+Deployment_Node(plc, "Wee", "Wee", "Big Bank plc data center"){
+    AddProperty("Location", "London and Reading")
+    Deployment_Node_L(dn, "bigbank-api***\tx8", "Ubuntu 16.04 LTS", "A web server residing in the web server farm, accessed via F5 BIG-IP LTMs."){
+        AddProperty("Java Version", "8")
+        AddProperty("Xmx", "512M")
+        AddProperty("Xms", "1024M")
+        Deployment_Node_L(apache, "Apache Tomcat", "Apache Tomcat 8.x", "An open source Java EE web server."){
+            Container(api, "API Application", "Java and Spring MVC", "Provides Internet Banking functionality via a JSON/HTTPS API.")
+        }
+    }
+    AddProperty("Location", "London")
+    Deployment_Node_L(bigbankdb01, "bigbank-db01", "Ubuntu 16.04 LTS", "The primary database server."){
+        Deployment_Node_L(oracle, "Oracle - Primary", "Oracle 12c", "The primary, live database server."){
+            ContainerDb(db, "Database", "Relational Database Schema", "Stores user registration information, hashed authentication credentials, access logs, etc.")
+        }
+    }
+    AddProperty("Location", "Reading")
+    Deployment_Node_R(bigbankdb02, "bigbank-db02", "Ubuntu 16.04 LTS", "The secondary database server.", $tags="fallback") {
+        Deployment_Node_R(oracle2, "Oracle - Secondary", "Oracle 12c", "A secondary, standby database server, used for failover purposes only.", $tags="fallback") {
+            ContainerDb(db2, "Database", "Relational Database Schema", "Stores user registration information, hashed authentication credentials, access logs, etc.", $tags="fallback")
+        }
+    }
+    AddProperty("Location", "London and Reading")
+    Deployment_Node_R(bb2, "bigbank-web***\tx4", "Ubuntu 16.04 LTS", "A web server residing in the web server farm, accessed via F5 BIG-IP LTMs."){
+        AddProperty("Java Version", "8")
+        AddProperty("Xmx", "512M")
+        AddProperty("Xms", "1024M")
+        Deployment_Node_R(apache2, "Apache Tomcat", "Apache Tomcat 8.x", "An open source Java EE web server."){
+            Container(web, "Web Application", "Java and Spring MVC", "Delivers the static content and the Internet Banking single page application.")
+        }
+    }
+}
+
+Deployment_Node(mob, "Customer's mobile device", "Apple IOS or Android"){
+    Container(mobile, "Mobile App", "Xamarin", "Provides a limited subset of the Internet Banking functionality to customers via their mobile device.")
+}
+
+Deployment_Node(comp, "Customer's computer", "Mircosoft Windows of Apple macOS"){
+    Deployment_Node(browser, "Web Browser", "Google Chrome, Mozilla Firefox, Apple Safari or Microsoft Edge"){
+        Container(spa, "Single Page Application", "JavaScript and Angular", "Provides all of the Internet Banking functionality to customers via their web browser.")
+    }
+}
+
+Rel(mobile, api, "Makes API calls to", "json/HTTPS")
+Rel(spa, api, "Makes API calls to", "json/HTTPS")
+Rel_U(web, spa, "Delivers to the customer's web browser")
+Rel(api, db, "Reads from and writes to", "JDBC")
+Rel(api, db2, "Reads from and writes to", "JDBC", $tags="fallback")
+Rel_R(db, db2, "Replicates data to")
+
+SHOW_LEGEND()
+
+'ContainerDb(db, "Database", "Microsoft SQL", "Holds product, order and invoice information", $sprite="mysql")
+'ContainerDb(mongodb, "Database","MongoDB","Persistence", $sprite="mongodb")
+
+'Container(videoClassifier,"Video Classifier","Python : Tensor Flow",$sprite="tensorflow_original")
+'Container(oldBackend,"Bom Perfil",$sprite="php")
+
+'Person(personAlias, "Label", "Optional Description")
+'Container(containerAlias, "Label", "Technology", "Optional Description")
+'System(systemAlias, "Label", "Optional Description")
+
+'Rel(personAlias, containerAlias, "Label", "Optional Technology")
+@enduml
