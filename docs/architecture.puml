@@ -1,0 +1,84 @@
+@startuml C4_Elements
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define DEVICONS2 https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons2
+!define MATERIAL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/material
+
+!include DEVICONS2/mysql.puml
+!include DEVICONS2/mongodb.puml
+!include DEVICONS2/php.puml
+!include DEVICONS2/python.puml
+!include DEVICONS2/redis.puml
+!include DEVICONS2/tensorflow_original.puml
+!include DEVICONS2/react_original.puml
+!include DEVICONS2/nodejs.puml
+!include DEVICONS2/kubernetes.puml
+!include DEVICONS2/go.puml
+!include DEVICONS2/github_original.puml
+!include DEVICONS/digital_ocean.puml
+!include DEVICONS2/kubernetes.puml
+!include MATERIAL/queue.puml
+!include MATERIAL/email.puml
+!include DEVICONS/react.puml
+
+title "Wee Ops Architecture"
+
+Deployment_Node(dc_dev,"Wee Development DataCenter","Debian 11","linode",$sprite="digital_ocean"){
+    AddProperty("Address","https://weedev.tk/")
+    AddProperty("CPU","1 CPU Core")
+    AddProperty("Memory","1 GB RAM")
+    AddProperty("Storage","25 GB")
+    Deployment_Node(dc_dev_k3s,"K3S",$sprite="kubernetes"){
+        Deployment_Node(persistence_dev,"Persistence"){            
+            ContainerDb(sql_dev,"SQL","MariaDB",$sprite="mysql")
+            ContainerDb(nosql_dev,"NoSQL","MongoDB",$sprite="mongodb")
+            Container_Ext(storage_dev,"Storage","Volume","Amazon S3")
+        }
+        Deployment_Node(aux_dev,"Auxiliary Services"){
+            Container(broker,"Broker","RabbitMQ",$sprite="email")
+            ContainerDb(cache_dev,"Cache","Redis",$sprite="redis")
+        }
+        Deployment_Node(services_dev,"Microservices"){
+            Deployment_Node(videoClassifier_dev,"Video Classifier") {
+                Container(vc_api_dev,"Video Classifier API","Golang",$sprite="go")
+                Container(vc_worker_dev,"Video Classifier","Python : Tensor Flow",$sprite="tensorflow_original")
+            }
+            Deployment_Node(wee_backend_dev,"Wee Backend"){
+                Container(wb_api_dev,"API","NodeJS",$sprite="nodejs")
+            }
+            Deployment_Node(wee_frontend_dev,"Wee Frontend"){
+                Container(wf_main_dev,"Main Frontend SPA","JavaScript, React",$sprite="react")                
+            }
+        }
+
+    }
+}
+
+Rel(vc_worker_dev, broker, "Receive notifications and process videos")
+Rel(vc_worker_dev,cache_dev,"Saves processed data from videos")
+Rel(vc_api_dev,storage_dev,"Receive videos and save into storage")
+Rel(vc_api_dev,broker,"Notify about received video")
+Rel(vc_api_dev,cache_dev,"Reads processed data from videos")
+Rel(wb_api_dev,sql_dev,"Structured data persistence")
+Rel(wf_main_dev,wb_api_dev,"")
+Rel(wb_api_dev,cache_dev,"b")
+
+
+
+
+
+SHOW_LEGEND()
+
+'ContainerDb(db, "Database", "Microsoft SQL", "Holds product, order and invoice information", $sprite="mysql")
+'ContainerDb(mongodb, "Database","MongoDB","Persistence", $sprite="mongodb")
+
+'Container(videoClassifier,"Video Classifier","Python : Tensor Flow",$sprite="tensorflow_original")
+'Container(oldBackend,"Bom Perfil",$sprite="php")
+
+'Person(personAlias, "Label", "Optional Description")
+'Container(containerAlias, "Label", "Technology", "Optional Description")
+'System(systemAlias, "Label", "Optional Description")
+
+'Rel(personAlias, containerAlias, "Label", "Optional Technology")
+@enduml
